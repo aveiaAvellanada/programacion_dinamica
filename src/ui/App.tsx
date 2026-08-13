@@ -24,7 +24,7 @@ export function App() {
   const [pinned, setPinned] = useState<FocusedCell | null>(null);
   const [selectedPolicy, setSelectedPolicy] = useState<number | null>(null);
   const [stepIndex, setStepIndex] = useState<number>(-1);
-  const [activeTab, setActiveTab] = useState<'both' | 'tables' | 'graph' | 'matrix'>('both');
+  const [activeTab, setActiveTab] = useState<'both' | 'tables' | 'graph'>('both');
 
   // Al editar el problema, cualquier hover/selección/paso anterior podría apuntar
   // a un estado o política que ya no existe — se limpia para evitar índices obsoletos.
@@ -228,6 +228,7 @@ export function App() {
 
       <PolicyList
         policies={solution.policies}
+        stages={problem.stages}
         optimalValue={solution.optimalValue}
         truncated={solution.truncated}
         selected={selectedPolicy}
