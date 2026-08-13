@@ -111,7 +111,61 @@ primera clase.
   las tablas de inducción y en la red de estados.
 
 -------------------------------------------------------------------------------
-3. ARQUITECTURA TÉCNICA
+3. EXPLICACIÓN MATEMÁTICA Y FUNCIONAMIENTO DEL ALGORITMO
+-------------------------------------------------------------------------------
+
+El modelo se fundamenta en el **Principio de Optimidad de Bellman**:
+"Una política óptima tiene la propiedad de que, cualesquiera que sean el estado
+inicial y las decisiones iniciales, las decisiones restantes deben constituir
+una política óptima con respecto al estado resultante de la primera decisión".
+
+[A] FORMULACIÓN DEL MODELO MATEMÁTICO:
+- N: Cantidad total de recursos/cargas disponibles (ejemplo: N = 5 cargas).
+- K: Número total de etapas/tiendas (ejemplo: K = 3 supermercados).
+- k: Índice de etapa, ordenado de k = 1 (última etapa/Supermercado 1) a
+     k = K (primera decisión en el tiempo/espacio, Supermercado K).
+- s_k: Variable de Estado a la entrada de la etapa k (recursos disponibles
+       para distribuir en las etapas k, k-1, ..., 1).
+- d_k: Variable de Decisión en la etapa k (cargas asignadas a la etapa k).
+- p_k(d_k): Función de Retorno o beneficio inmediato por asignar d_k cargas.
+- s_{k-1} = s_k - d_k: Ecuación de transición de estado (recursos sobrantes).
+
+[B] RESTRICCIONES DEL MODELO:
+1. Restricción de Capacidad Global: sum_{k=1}^K d_k <= N
+2. Dominio de Decisión en la Etapa k: d_k in {0, 1, ..., s_k}
+3. No Negatividad e Integridad: d_k >= 0, s_k >= 0 (ambos enteros).
+4. Estado Inicial y Final: s_K = N (inicio) y s_0 = 0 (fin).
+
+[C] ECUACIÓN RECURSIVA DE BELLMAN (INDUCCIÓN HACIA ATRÁS):
+
+1. Caso Base (Etapa k = 1):
+   f*_1(s_1) = max_{0 <= d_1 <= s_1} { p_1(d_1) + f*_0(s_1 - d_1) }
+   Donde f*_0(s) = 0 para todo s (caso base sin etapas restantes).
+
+2. Paso Inductivo (Etapas k = 2, 3, ..., K):
+   f*_k(s_k) = max_{0 <= d_k <= s_k} { p_k(d_k) + f*_{k-1}(s_k - d_k) }
+   (O min en lugar de max si el objetivo es minimizar costos).
+
+[D] CÓMO FUNCIONA EL ALGORITMO PASO A PASO:
+1. Fase 1: Tabulación Recursiva Hacia Atrás (Backward Induction)
+   - El motor construye la solución comenzando en k = 1 hasta k = K.
+   - Para cada estado s_k in {0..N} y cada decisión d_k in {0..s_k}:
+     * Calcula f_k(s_k, d_k) = p_k(d_k) + f*_{k-1}(s_k - d_k).
+     * Determina el valor óptimo f*_k(s_k) = max_{d_k} f_k(s_k, d_k).
+     * Almacena el conjunto d*_k(s_k) con TODAS las decisiones que alcanzan f*_k(s_k).
+
+2. Fase 2: Reconstrucción de Rutas Óptimas (Backtracking con Empates)
+   - Comienza en el estado inicial s_K = N (recursos totales).
+   - Consulta el conjunto de decisiones óptimas d*_K(s_K).
+   - Si d*_K contiene múltiples decisiones (empate), el algoritmo se ramifica
+     para explorar cada una de ellas de forma independiente.
+   - Para cada decisión d_k elegida, calcula el nuevo estado s_{k-1} = s_k - d_k
+     y avanza hacia k-1 hasta llegar a s_0 = 0.
+   - Esto garantiza la generación de TODAS las políticas óptimas posibles sin perder
+     ningún empate.
+
+-------------------------------------------------------------------------------
+4. ARQUITECTURA TÉCNICA Y PRUEBAS
 -------------------------------------------------------------------------------
 - Motor de Cálculo (`src/engine/`): Módulo independiente en TypeScript estricto
   encargado de resolver el algoritmo de programación dinámica.
