@@ -1,0 +1,123 @@
+===============================================================================
+VISUALIZADOR DE PROGRAMACIÓN DINÁMICA MULTIETAPA DETERMINÍSTICA
+RESUMEN GENERAL Y GUÍA DE COMPONENTES DE LA PÁGINA WEB
+===============================================================================
+
+Desarrolladores:
+- Carlos Daniel Gómez Murcia
+- Camilo Andrés Artunduaga Bueno
+
+Materia: Investigación de Operaciones
+Institución: Universidad de la Amazonia
+
+-------------------------------------------------------------------------------
+1. ¿QUÉ ES ESTE PROYECTO?
+-------------------------------------------------------------------------------
+Es una aplicación web interactiva de alto nivel diseñada para resolver y
+visualizar problemas de Programación Dinámica Multietapa Determinística
+mediante el método de Inducción Hacia Atrás Explícita.
+
+Permite asignar recursos limitados (ej. cargas a supermercados, presupuesto a
+plantas, etc.) calculando de forma rigurosa los retornos acumulados, el valor
+óptimo f* y tratando los empates múltiples como soluciones óptimas válidas de
+primera clase.
+
+-------------------------------------------------------------------------------
+2. ESTRUCTURA Y FUNCIONALIDADES DE LA PÁGINA (SECCIÓN POR SECCIÓN)
+-------------------------------------------------------------------------------
+
+[A] ENCABEZADO Y RESUMEN GENERAL (App Header & Solution Summary)
+---------------------------------------------------------------
+- Título y Créditos: Muestra el nombre de la herramienta y los autores.
+- Subtítulo Matemático: Explicación de la ecuación de transición de estado
+  (s_{k-1} = s_k - d_k).
+- Insignia de Valor Óptimo f*: Indica el beneficio máximo total alcanzable.
+- Insignia de Políticas Óptimas: Muestra cuántas soluciones o planes distintos
+  alcanzan la ganancia máxima.
+- Insignia de Filas con Empate: Indica cuántas combinaciones presentaron empates
+  durante el cálculo.
+
+[B] CONFIGURACIÓN DEL PROBLEMA (Problem Editor)
+---------------------------------------------------------------
+- Recursos totales (N): Define el número máximo de cargas o unidades a distribuir.
+- Objetivo (f*): Permite elegir entre Maximizar (ganancias/retornos) o Minimizar
+  (costos/riesgos).
+- Botón "+ Agregar Etapa" / "✕ Quitar": Permite añadir o eliminar etapas/tiendas.
+- Nombres de Etapas: Modifica el título de cada supermercado o proyecto.
+- Matriz de Retornos p_k(d_k): Celdas numéricas editables donde se ingresa la
+  ganancia obtenida por asignar 'd' cargas a la etapa 'k'.
+- Ejemplos Predefinidos: Menú desplegable para cargar problemas clásicos con un clic.
+- Importar / Exportar JSON: Guarda o carga configuraciones completas en archivo JSON.
+
+[C] MATRIZ DE GANANCIAS ESTIMADAS Y RESTRICCIONES (Payoff Matrix & Constraints)
+---------------------------------------------------------------
+- Tabla de Ganancias Estimadas: Muestra una vista clara y ordenada de la matriz
+  p_k(d_k) donde las filas representan el número de cargas (0 cargas, 1 carga...)
+  y las columnas corresponden a cada supermercado. Se actualiza automáticamente.
+- Formulación & Restricciones del Modelo: Presenta la función objetivo, la
+  restricción de recursos totales (sum(d_k) <= N), la transición de estado y el
+  dominio de variables en notación LaTeX profesional (KaTeX).
+
+[D] INSPECTOR DE CELDA Y LEYENDA (Cell Inspector & Legend)
+---------------------------------------------------------------
+- Inspector Interactivo: Al pasar el cursor o hacer clic sobre una celda, desglosa
+  la Ecuación de Bellman completa: f_k(s,d) = p_k(d) + f*_{k-1}(s-d) = valor.
+- Fijado de Celda (Pin): Al hacer clic en una celda, la fijación se mantiene aun si
+  mueves el cursor. Presionar [Esc] la soltarás.
+- Detección de Infactibilidad: Explica cuando una decisión no es válida porque d > s.
+- Leyenda de Colores: Muestra el significado visual (verde = óptimo, amarillo =
+  fijado, azul = consultado en k-1, morado = ruta de política).
+
+[E] SELECTOR DE VISUALIZACIÓN (View Selector)
+---------------------------------------------------------------
+- Vista Combinada (📊): Muestra simultáneamente las tablas numéricas y el grafo.
+- Tablas de Inducción (📋): Muestra únicamente las tablas de calculo hacia atrás.
+- Red de Estados (🕸️): Muestra únicamente el diagrama de red interactivo SVG.
+
+[F] TABLAS DE INDUCCIÓN HACIA ATRÁS (Stage Tables)
+---------------------------------------------------------------
+- Estructura por Etapa (k = 1..K): Filas para recursos disponibles 's' y columnas
+  para cargas asignadas 'd'.
+- Desglose en Celda: Muestra la suma (p_k + f*_{k-1}) al pasar el cursor.
+- Columnas f* y d*: Destacan el valor máximo alcanzado en cada fila y la decisión o
+  conjunto de decisiones empatadas {d*}.
+
+[G] RED INTERACTIVA DE ESTADOS (State Graph SVG)
+---------------------------------------------------------------
+- Nodos de Estado: Visualiza los estados 's' en cada etapa mostrando su valor f*.
+- Aristas Curvas Clicables: Representan las decisiones 'd'. Al hacer clic o pasar
+  el cursor sobre una arista, se conecta con el inspector de celdas.
+
+[H] REPRODUCTOR PASO A PASO (Step Player)
+---------------------------------------------------------------
+- Simulación Animada: Permite reproducir la resolución del problema paso a paso.
+- Controles: Botones de Reproducir/Pausa, Paso Anterior/Siguiente, Salto a
+  Backtracking e Inicio/Fin.
+- Control de Velocidad: Opciones de 1x, 2x y 5x.
+- Barra de Progreso: Muestra el porcentaje de avance del algoritmo.
+- Descripción del Paso: Texto explicativo de la acción que realiza el motor.
+- Atajos de Teclado: Flechas [←] / [→] para avanzar/retroceder y [Espacio] para reproducir.
+
+[I] PLANES DE ASIGNACIÓN ÓPTIMA / POLÍTICAS (Policy List)
+---------------------------------------------------------------
+- Tarjetas de Políticas Óptimas: Muestra las distintas combinaciones de asignación
+  que logran la ganancia máxima f*.
+- Desglose por Supermercado: Tarjetas individuales que indican cuántas cargas
+  asignar a cada supermercado y la ganancia parcial generada.
+- Resumen en Lenguaje Natural: Explicación directa y clara (ej. "Asignar 0 cargas a
+  Supermercado 3, 1 carga a Supermercado 2 y 4 cargas a Supermercado 1").
+- Trazabilidad de Estados: Muestra la cadena técnica completa s_K -> ... -> s_0.
+- Selección Interactiva: Al hacer clic en una política, resalta su ruta exacta en
+  las tablas de inducción y en la red de estados.
+
+-------------------------------------------------------------------------------
+3. ARQUITECTURA TÉCNICA
+-------------------------------------------------------------------------------
+- Motor de Cálculo (`src/engine/`): Módulo independiente en TypeScript estricto
+  encargado de resolver el algoritmo de programación dinámica.
+- Interfaz React (`src/ui/`): Componentes desarrollados en React 19 + TypeScript.
+- Estilos CSS (`styles.css` y `polish.css`): Diseño responsivo, tema oscuro premium.
+- Renderizado Matemático: KaTeX para la notación científica de LaTeX.
+- Pruebas Automatizadas: Vitest + React Testing Library (28 pruebas pasando).
+
+===============================================================================
