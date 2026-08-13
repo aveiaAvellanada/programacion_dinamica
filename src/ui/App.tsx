@@ -212,6 +212,8 @@ export function App() {
           path={path}
           onHoverCell={(k, state, d) => setHovered({ k, state, d })}
           onLeaveCell={() => setHovered(null)}
+          onClickCell={(k, state, d) => togglePin(k, state, d)}
+          pinnedKey={pinnedKey}
         />
       )}
 

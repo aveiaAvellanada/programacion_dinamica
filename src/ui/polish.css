@@ -195,6 +195,13 @@ kbd {
   line-height: 1.15;
 }
 
+/* Todo el contenido de la fila se alinea arriba para que f* y d* queden a la
+   misma altura que el valor de cada celda (y no entre sus dos líneas). */
+.stage-table tbody td,
+.stage-table tbody th {
+  vertical-align: top;
+}
+
 .cell:hover:not(.infeasible) {
   filter: brightness(1.35);
 }
@@ -203,21 +210,32 @@ kbd {
   display: block;
 }
 
+/* El espacio se reserva siempre (opacidad, no altura) para que pasar el
+   cursor no cambie la altura de la fila y la tabla no salte. */
 .cell-breakdown {
   display: block;
   font-size: 0.62rem;
+  line-height: 1.1;
   color: var(--text-dim);
   opacity: 0;
-  height: 0;
-  overflow: hidden;
   transition: opacity 0.12s ease;
+  pointer-events: none;
 }
 
 .cell:hover .cell-breakdown,
 .cell.primary .cell-breakdown,
 .row-active .cell-breakdown {
   opacity: 1;
-  height: auto;
+}
+
+/* Las celdas infactibles no tienen desglose: se compensa la línea que
+   ocuparía para que todas las filas midan lo mismo. */
+.cell.infeasible::after {
+  content: '';
+  display: block;
+  font-size: 0.62rem;
+  line-height: 1.1;
+  height: 1.1em;
 }
 
 .cell.pinned {
@@ -410,6 +428,53 @@ th.row-head.active {
   margin: 0.85rem 0 0;
   font-size: 0.82rem;
   color: var(--text-dim);
+}
+
+/* ---------- Red de estados ---------- */
+.graph-fstar-label {
+  fill: var(--text-dim);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.graph-edge-group:hover .graph-fstar-label {
+  fill: var(--text-muted);
+}
+
+.graph-container svg {
+  display: block;
+}
+
+.graph-tooltip {
+  font-variant-numeric: tabular-nums;
+}
+
+.graph-tooltip.muted-tooltip {
+  color: var(--text-dim);
+  border-left-color: #1e2634;
+}
+
+.graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.graph-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.graph-legend-line {
+  width: 22px;
+  height: 0;
+  border-top-width: 3px;
+  border-top-style: solid;
+  border-radius: 2px;
 }
 
 /* ---------- Pie ---------- */

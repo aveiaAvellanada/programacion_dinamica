@@ -10,6 +10,8 @@ interface Props {
   path: Set<string>;
   onHoverCell: (k: number, state: number, d: number) => void;
   onLeaveCell: () => void;
+  onClickCell: (k: number, state: number, d: number) => void;
+  pinnedKey: string | null;
 }
 
 interface NodePos {
@@ -18,6 +20,8 @@ interface NodePos {
   state: number;
   x: number;
   y: number;
+  /** f*_k(state): valor óptimo desde este estado en adelante. 0 en la columna final (k=0). */
+  fStar: number;
 }
 
 interface EdgeDef {
@@ -44,6 +48,8 @@ export function StateGraph({
   path,
   onHoverCell,
   onLeaveCell,
+  onClickCell,
+  pinnedKey,
 }: Props) {
   const [showAllTransitions, setShowAllTransitions] = useState(false);
   const [hoveredEdge, setHoveredEdge] = useState<EdgeDef | null>(null);
@@ -52,8 +58,8 @@ export function StateGraph({
   const N = problem.resources;
 
   // Parámetros de renderizado SVG
-  const colWidth = 140;
-  const rowHeight = 45;
+  const colWidth = 150;
+  const rowHeight = 58;
   const paddingX = 80;
   const paddingY = 60;
 
@@ -85,9 +91,11 @@ export function StateGraph({
     for (let colIdx = 0; colIdx <= K; colIdx++) {
       const stageK = K - colIdx; // stage index (k=K at col 0, down to k=1 at col K-1, and 0 for col K)
       const x = paddingX + colIdx * colWidth;
+      const stageForCol = solution.stages.find((st) => st.k === stageK);
       for (let s = 0; s <= N; s++) {
         const y = paddingY + (N - s) * rowHeight; // s=N arriba, s=0 abajo
-        const node: NodePos = { k: stageK, colIdx, state: s, x, y };
+        const fStar = stageForCol ? (stageForCol.rows[s]?.fStar ?? 0) : 0;
+        const node: NodePos = { k: stageK, colIdx, state: s, x, y, fStar };
         nodes.push(node);
         nodeMap.set(`${colIdx},${s}`, node);
       }
@@ -264,6 +272,18 @@ export function StateGraph({
               marker = 'url(#arrow-path)';
             }
 
+            const isPinned = pinnedKey === edge.id;
+            if (isPinned) strokeWidth = Math.max(strokeWidth, 4);
+
+            // Curva suave: desplaza el punto de control perpendicularmente al
+            // tramo para separar aristas que comparten origen o destino.
+            const mx = (edge.x1 + edge.x2) / 2;
+            const my = (edge.y1 + edge.y2) / 2;
+            const bow = (edge.y2 - edge.y1) * 0.12;
+            const cx = mx + bow;
+            const d = `M ${edge.x1} ${edge.y1} Q ${cx} ${my} ${edge.x2} ${edge.y2}`;
+            const showLabel = edge.isPath || edge.isPrimary || edge.isLinked || isPinned || hoveredEdge?.id === edge.id;
+
             return (
               <g
                 key={edge.id}
@@ -276,22 +296,22 @@ export function StateGraph({
                   setHoveredEdge(null);
                   onLeaveCell();
                 }}
+                onClick={() => onClickCell(edge.k, edge.state, edge.d)}
               >
-                <line
-                  x1={edge.x1}
-                  y1={edge.y1}
-                  x2={edge.x2}
-                  y2={edge.y2}
+                {/* Trazo ancho invisible: agranda el área de hover/clic. */}
+                <path d={d} stroke="transparent" strokeWidth={12} fill="none" />
+                <path
+                  d={d}
                   stroke={strokeColor}
                   strokeWidth={strokeWidth}
                   strokeDasharray={strokeDash}
+                  fill="none"
                   markerEnd={marker}
                 />
-                {/* Etiqueta de decisión d sobre la arista cuando está resaltada o hover */}
-                {(edge.isPath || edge.isPrimary || edge.isLinked || hoveredEdge?.id === edge.id) && (
-                  <g transform={`translate(${(edge.x1 + edge.x2) / 2}, ${(edge.y1 + edge.y2) / 2 - 8})`}>
-                    <rect x="-14" y="-9" width="28" height="16" rx="4" fill="#0f1216" stroke={strokeColor} strokeWidth="1" />
-                    <text x="0" y="3" textAnchor="middle" fill="#e6e6e6" fontSize="10" fontWeight="bold">
+                {showLabel && (
+                  <g transform={`translate(${(mx + cx) / 2}, ${my - 8})`}>
+                    <rect x="-14" y="-9" width="28" height="16" rx="4" fill="#0b0e14" stroke={strokeColor} strokeWidth="1" />
+                    <text x="0" y="3" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">
                       d={edge.d}
                     </text>
                   </g>
@@ -308,27 +328,58 @@ export function StateGraph({
               (e) => (e.isOptimal || e.isPath) && ((e.x1 === node.x && e.y1 === node.y) || (e.x2 === node.x && e.y2 === node.y))
             );
 
+            const label =
+              node.colIdx === K
+                ? `Estado final s₀=${node.state}`
+                : `k=${node.k}, s=${node.state} · f*=${node.fStar}`;
+
             return (
               <g key={`${node.colIdx}-${node.state}`} transform={`translate(${node.x}, ${node.y})`}>
+                <title>{label}</title>
                 <circle
                   r={12}
-                  fill={isInitialStart ? '#2563eb' : isReachableOptimal ? '#172554' : '#171b21'}
+                  fill={isInitialStart ? '#2563eb' : isReachableOptimal ? '#172554' : '#131722'}
                   stroke={isInitialStart ? '#60a5fa' : isReachableOptimal ? '#3b82f6' : '#333a44'}
                   strokeWidth={isInitialStart ? 3 : 1.5}
                 />
-                <text x="0" y="4" textAnchor="middle" fill="#e6e6e6" fontSize="11" fontWeight="600">
+                <text x="0" y="4" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">
                   {node.state}
                 </text>
+                {node.colIdx < K && (
+                  <text x="0" y="25" textAnchor="middle" className="graph-fstar-label">
+                    f*={node.fStar}
+                  </text>
+                )}
               </g>
             );
           })}
         </svg>
       </div>
 
-      {hoveredEdge && (
+      <div className="graph-legend">
+        <span className="graph-legend-item">
+          <span className="graph-legend-line" style={{ borderColor: '#10b981' }} /> decisión óptima d*
+        </span>
+        <span className="graph-legend-item">
+          <span className="graph-legend-line" style={{ borderColor: '#ffb020' }} /> enfocada
+        </span>
+        <span className="graph-legend-item">
+          <span className="graph-legend-line" style={{ borderColor: '#4da3ff' }} /> consultada en k−1
+        </span>
+        <span className="graph-legend-item">
+          <span className="graph-legend-line" style={{ borderColor: '#c77dff' }} /> política seleccionada
+        </span>
+        <span className="graph-legend-item">Los nodos muestran el estado s y su valor óptimo f*.</span>
+      </div>
+
+      {hoveredEdge ? (
         <div className="graph-tooltip">
-          Etapa k={hoveredEdge.k}: En estado s={hoveredEdge.state}, tomar decisión d={hoveredEdge.d} pasa al estado s'=
-          {hoveredEdge.prevState}
+          Etapa k={hoveredEdge.k}: desde s={hoveredEdge.state}, asignar d={hoveredEdge.d} deja s′={hoveredEdge.prevState} para
+          la etapa k={hoveredEdge.k - 1}. Haz clic para fijar esta transición.
+        </div>
+      ) : (
+        <div className="graph-tooltip muted-tooltip">
+          Pasa el cursor por una arista para leer su transición; haz clic para fijarla en el inspector.
         </div>
       )}
     </section>

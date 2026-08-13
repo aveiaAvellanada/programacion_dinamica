@@ -93,6 +93,22 @@ describe('App — prueba de humo de la interfaz', () => {
     expect(document.querySelectorAll('td.cell.path').length).toBe(3);
   });
 
+  it('la red de estados dibuja nodos con su f* y aristas clicables', () => {
+    render(<App />);
+    const svg = document.querySelector('.graph-container svg');
+    expect(svg).not.toBeNull();
+
+    // Cada nodo de una etapa real muestra su valor óptimo.
+    expect(document.querySelectorAll('.graph-fstar-label').length).toBeGreaterThan(0);
+
+    const edge = document.querySelector('.graph-edge-group');
+    expect(edge).not.toBeNull();
+    if (!edge) return;
+
+    fireEvent.click(edge);
+    expect(document.querySelector('.inspector.pinned')).not.toBeNull();
+  });
+
   it('editar los recursos recalcula la solución sin romper la vista', () => {
     render(<App />);
     const input = screen.getByLabelText(/Recursos totales/i, { selector: 'input' });
