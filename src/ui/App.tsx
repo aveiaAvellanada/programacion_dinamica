@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSolution } from './useSolution';
 import { ProblemEditor } from './ProblemEditor';
+import { PayoffMatrixView } from './PayoffMatrixView';
 import { StageTable } from './StageTable';
 import { StateGraph } from './StateGraph';
 import { StepPlayer } from './StepPlayer';
@@ -9,6 +10,7 @@ import { CellInspector } from './CellInspector';
 import { Legend } from './Legend';
 import { cellKey } from './highlight';
 import { getCellInfo } from './cellInfo';
+import { MathView } from './MathView';
 
 interface FocusedCell {
   k: number;
@@ -22,7 +24,7 @@ export function App() {
   const [pinned, setPinned] = useState<FocusedCell | null>(null);
   const [selectedPolicy, setSelectedPolicy] = useState<number | null>(null);
   const [stepIndex, setStepIndex] = useState<number>(-1);
-  const [activeTab, setActiveTab] = useState<'tables' | 'graph' | 'both'>('both');
+  const [activeTab, setActiveTab] = useState<'both' | 'tables' | 'graph' | 'matrix'>('both');
 
   // Al editar el problema, cualquier hover/selección/paso anterior podría apuntar
   // a un estado o política que ya no existe — se limpia para evitar índices obsoletos.
@@ -116,14 +118,17 @@ export function App() {
       <header className="app-header">
         <div>
           <h1>Visualizador de Programación Dinámica Multietapa</h1>
+          <div className="authors-badge">
+            <span>Desarrollado por:</span>
+            <strong>Carlos Daniel Gómez Murcia</strong> & <strong>Camilo Andrés Artunduaga Bueno</strong>
+          </div>
           <p className="subtitle">
-            Inducción hacia atrás explícita (s<sub>k</sub>, d<sub>k</sub>, s<sub>k−1</sub> = s<sub>k</sub> − d<sub>k</sub>) con
-            tratamiento riguroso de empates
+            Inducción hacia atrás explícita (<MathView math="s_k, \, d_k, \, s_{k-1} = s_k - d_k" />) con tratamiento riguroso de empates
           </p>
         </div>
         <div className="solution-summary">
           <div className="summary-badge">
-            <span className="label">Valor óptimo f*</span>
+            <span className="label">Valor óptimo <MathView math="f^*" /></span>
             <span className="value">{solution.optimalValue}</span>
           </div>
           <div className="summary-badge">
@@ -141,6 +146,8 @@ export function App() {
       </header>
 
       <ProblemEditor problem={problem} onChange={setProblem} />
+
+      <PayoffMatrixView problem={problem} />
 
       <section className="panel inspector-panel">
         <div className="panel-header">
@@ -228,7 +235,13 @@ export function App() {
       />
 
       <footer className="app-footer">
-        Modelos Determinísticos · Investigación de Operaciones · Universidad de la Amazonia
+        <div>
+          <strong>Visualizador de Programación Dinámica Multietapa</strong> · Desarrollado por{' '}
+          <strong>Carlos Daniel Gómez Murcia</strong> & <strong>Camilo Andrés Artunduaga Bueno</strong>
+        </div>
+        <div className="footer-subtext">
+          Investigación de Operaciones · Universidad de la Amazonia
+        </div>
       </footer>
     </div>
   );

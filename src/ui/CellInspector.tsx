@@ -1,5 +1,6 @@
 import type { Sense } from '../engine/types';
 import type { CellInfo } from './cellInfo';
+import { MathView } from './MathView';
 
 interface Props {
   info: CellInfo | null;
@@ -29,7 +30,7 @@ export function CellInspector({ info, sense, pinned, onUnpin }: Props) {
         <strong>{stageLabel}</strong>
         <span className="inspector-sep">·</span>
         <span className="text-muted">
-          estado s<sub>{k}</sub> = {state}, decisión d<sub>{k}</sub> = {cell.d}
+          estado <MathView math={`s_{${k}} = ${state}`} />, decisión <MathView math={`d_{${k}} = ${cell.d}`} />
         </span>
         {pinned && (
           <button type="button" className="btn-danger-sm inspector-unpin" onClick={onUnpin} title="Soltar celda fijada (Esc)">
@@ -40,18 +41,18 @@ export function CellInspector({ info, sense, pinned, onUnpin }: Props) {
 
       {!cell.feasible ? (
         <p className="inspector-infeasible">
-          <strong>Infactible.</strong> No se puede asignar d<sub>{k}</sub>={cell.d} cuando solo hay s<sub>{k}</sub>={state}{' '}
-          recursos disponibles (se requiere d ≤ s).
+          <strong>Infactible.</strong> No se puede asignar <MathView math={`d_{${k}} = ${cell.d}`} /> cuando solo hay{' '}
+          <MathView math={`s_{${k}} = ${state}`} /> recursos disponibles (se requiere <MathView math="d_k \\le s_k" />).
         </p>
       ) : (
         <>
           <div className="bellman">
             <span className="bellman-term">
-              f<sub>{k}</sub>({state}, {cell.d})
+              <MathView math={`f_{${k}}(${state}, ${cell.d})`} />
             </span>
             <span className="bellman-op">=</span>
             <span className="bellman-term term-pk" title={`Retorno inmediato de asignar ${cell.d} en esta etapa`}>
-              p<sub>{k}</sub>({cell.d}) = {cell.pk}
+              <MathView math={`p_{${k}}(${cell.d}) = ${cell.pk}`} />
             </span>
             <span className="bellman-op">+</span>
             <span
@@ -62,29 +63,28 @@ export function CellInspector({ info, sense, pinned, onUnpin }: Props) {
                   : 'Caso base: f*₀(s) ≡ 0'
               }
             >
-              f*<sub>{k - 1}</sub>({cell.prevState}) = {cell.fPrev}
+              <MathView math={`f^*_{${k - 1}}(${cell.prevState}) = ${cell.fPrev}`} />
             </span>
             <span className="bellman-op">=</span>
             <span className={cell.isOptimal ? 'bellman-result optimal' : 'bellman-result'}>{cell.value}</span>
-            {cell.isOptimal && <span className="badge badge-optimal">óptimo d*</span>}
+            {cell.isOptimal && <span className="badge badge-optimal">óptimo <MathView math="d^*" /></span>}
           </div>
 
           <p className="inspector-note">
-            Transición: s<sub>{k - 1}</sub> = s<sub>{k}</sub> − d<sub>{k}</sub> = {state} − {cell.d} ={' '}
-            <strong>{cell.prevState}</strong>
+            Transición: <MathView math={`s_{${k - 1}} = s_{${k}} - d_{${k}} = ${state} - ${cell.d} = ${cell.prevState}`} />
             {prevStageLabel ? (
               <>
                 {' '}
                 → se consulta el óptimo ya calculado de <em>{prevStageLabel}</em> (k={k - 1}).
               </>
             ) : (
-              <> → caso base f*₀ ≡ 0, no hay más etapas por resolver.</>
+              <> → caso base <MathView math="f^*_0 \\equiv 0" />, no hay más etapas por resolver.</>
             )}
           </p>
 
           <p className="inspector-note">
-            En esta fila el {senseWord} es f*<sub>{k}</sub>({state}) = <strong>{fStar}</strong>, alcanzado por d ∈{' '}
-            <strong>{`{${dStar.join(', ')}}`}</strong>
+            En esta fila el {senseWord} es <MathView math={`f^*_{${k}}(${state}) = ${fStar}`} />, alcanzado por{' '}
+            <MathView math={`d_{${k}}^* \\in \\{${dStar.join(', ')}\\}`} />
             {dStar.length > 1 && <span className="tie-note"> — hay {dStar.length} decisiones empatadas.</span>}
           </p>
         </>

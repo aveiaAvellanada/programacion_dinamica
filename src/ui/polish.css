@@ -1,8 +1,8 @@
 /* ============================================================
    Capa de pulido: inspector de celda, leyenda, crosshair de
-   tablas, reproductor enriquecido y lista de políticas.
-   Se importa DESPUÉS de styles.css, por lo que gana en la
-   cascada ante reglas de igual especificidad.
+   tablas, reproductor enriquecido, lista de políticas,
+   matriz de ganancias estimadas y créditos de autores.
+   Se importa DESPUÉS de styles.css.
    ============================================================ */
 
 kbd {
@@ -18,6 +18,193 @@ kbd {
 
 .text-muted {
   color: var(--text-muted);
+}
+
+/* ---------- Autores en Encabezado ---------- */
+.authors-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 20px;
+  padding: 0.25rem 0.85rem;
+  font-size: 0.82rem;
+  color: #93c5fd;
+  margin-top: 0.35rem;
+}
+
+.authors-badge strong {
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.footer-subtext {
+  margin-top: 0.25rem;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+}
+
+/* ---------- KaTeX Math Customization ---------- */
+.math-rendered {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.math-block {
+  display: block;
+  text-align: center;
+  margin: 0.2rem 0;
+}
+
+.katex {
+  font-size: 1.05em;
+}
+
+/* ---------- Matriz de Ganancias Estimadas & Restricciones ---------- */
+.payoff-matrix-panel .panel-subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0.2rem 0 0;
+}
+
+.payoff-matrix-container {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.25rem;
+  align-items: start;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 920px) {
+  .payoff-matrix-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.payoff-table-wrapper {
+  overflow-x: auto;
+  background: #0d1117;
+  border: 1px solid #1b212e;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.payoff-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.payoff-matrix-table th,
+.payoff-matrix-table td {
+  padding: 0.55rem 0.75rem;
+  text-align: center;
+  border: 1px solid #1e2634;
+}
+
+.payoff-matrix-corner {
+  background: #111622;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: left !important;
+}
+
+.payoff-matrix-col-head {
+  background: #111622;
+  color: #f8fafc;
+}
+
+.stage-num-badge {
+  display: block;
+  font-size: 0.7rem;
+  color: #60a5fa;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.stage-name-text {
+  font-size: 0.88rem;
+}
+
+.payoff-matrix-row-head {
+  background: #111622;
+  text-align: left !important;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.d-sub-label {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.payoff-matrix-cell {
+  background: rgba(15, 23, 42, 0.4);
+  transition: background 0.15s ease;
+}
+
+.payoff-matrix-cell:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.payoff-cell-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.model-constraints-card {
+  background: #0d1117;
+  border: 1px solid #1b212e;
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.model-constraints-card h3 {
+  color: #f8fafc;
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.constraint-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed #1e2634;
+}
+
+.constraint-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.constraint-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.constraint-math {
+  background: #111827;
+  border: 1px solid #1f293d;
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  text-align: center;
+  color: #38bdf8;
+}
+
+.constraint-desc {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  line-height: 1.4;
 }
 
 /* ---------- Leyenda ---------- */
@@ -195,8 +382,6 @@ kbd {
   line-height: 1.15;
 }
 
-/* Todo el contenido de la fila se alinea arriba para que f* y d* queden a la
-   misma altura que el valor de cada celda (y no entre sus dos líneas). */
 .stage-table tbody td,
 .stage-table tbody th {
   vertical-align: top;
@@ -210,8 +395,6 @@ kbd {
   display: block;
 }
 
-/* El espacio se reserva siempre (opacidad, no altura) para que pasar el
-   cursor no cambie la altura de la fila y la tabla no salte. */
 .cell-breakdown {
   display: block;
   font-size: 0.62rem;
@@ -228,8 +411,6 @@ kbd {
   opacity: 1;
 }
 
-/* Las celdas infactibles no tienen desglose: se compensa la línea que
-   ocuparía para que todas las filas midan lo mismo. */
 .cell.infeasible::after {
   content: '';
   display: block;

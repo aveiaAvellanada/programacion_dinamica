@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from 'react';
 import type { DPProblem, Sense } from '../engine/types';
 import { PRESET_PROBLEMS } from './presets';
+import { MathView } from './MathView';
 
 interface Props {
   problem: DPProblem;
@@ -131,7 +132,7 @@ export function ProblemEditor({ problem, onChange }: Props) {
 
       <div className="row params-row">
         <label>
-          <span>Recursos totales (N)</span>
+          <span>Recursos totales (<MathView math="N" />)</span>
           <input
             type="number"
             min={0}
@@ -141,7 +142,7 @@ export function ProblemEditor({ problem, onChange }: Props) {
           />
         </label>
         <label>
-          <span>Objetivo (f*)</span>
+          <span>Objetivo (<MathView math="f^*" />)</span>
           <select value={problem.sense} onChange={(e) => setSense(e.target.value as Sense)}>
             <option value="max">Maximizar (Ganancia / VPN)</option>
             <option value="min">Minimizar (Costo / Riesgo)</option>
@@ -174,10 +175,10 @@ export function ProblemEditor({ problem, onChange }: Props) {
               </button>
             </div>
             <div className="payoff-grid">
-              <span className="payoff-grid-title">Retornos p_k(d_k):</span>
+              <span className="payoff-grid-title">Retornos <MathView math="p_k(d_k)" />:</span>
               {stage.payoff.map((value, d) => (
                 <label key={d} className="payoff-cell">
-                  <span className="payoff-d-label">d={d}</span>
+                  <span className="payoff-d-label"><MathView math={`d=${d}`} /></span>
                   <input
                     type="number"
                     value={value}

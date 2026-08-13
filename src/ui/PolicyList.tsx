@@ -1,4 +1,5 @@
 import type { Policy } from '../engine/types';
+import { MathView } from './MathView';
 
 interface Props {
   policies: Policy[];
@@ -47,13 +48,17 @@ export function PolicyList({ policies, optimalValue, truncated, selected, onSele
                     .reverse()
                     .map(({ d, i }) => (
                       <span className="policy-hop" key={i}>
-                        <span className="hop-state">s={policy.states[i]}</span>
+                        <span className="hop-state">
+                          <MathView math={`s_{${i + 1}}=${policy.states[i]}`} />
+                        </span>
                         <span className="hop-arrow" title={`Etapa k=${i + 1}: asignar ${d}`}>
-                          —d<sub>{i + 1}</sub>={d}→
+                          <MathView math={`\\xrightarrow{d_{${i + 1}}=${d}}`} />
                         </span>
                       </span>
                     ))}
-                  <span className="hop-state final">s=0</span>
+                  <span className="hop-state final">
+                    <MathView math="s_0=0" />
+                  </span>
                 </span>
 
                 <span className="policy-sum">
@@ -76,7 +81,7 @@ export function PolicyList({ policies, optimalValue, truncated, selected, onSele
       </ul>
 
       <p className="policy-footnote">
-        Valor óptimo global f* = <strong>{optimalValue}</strong>
+        Valor óptimo global <MathView math="f^*" /> = <strong>{optimalValue}</strong>
         {policies.length > 1 && <> · todas las políticas listadas lo alcanzan exactamente (empate real, no redondeo).</>}
       </p>
     </section>

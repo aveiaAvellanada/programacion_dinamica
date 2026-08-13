@@ -1,5 +1,6 @@
 import type { StageResult } from '../engine/types';
 import { cellKey } from './highlight';
+import { MathView } from './MathView';
 
 interface Props {
   stage: StageResult;
@@ -40,7 +41,7 @@ export function StageTable({
           <thead>
             <tr>
               <th className="corner" title="Filas: estado s (recursos disponibles). Columnas: decisión d (recursos asignados).">
-                s \ d
+                <MathView math="s \backslash d" />
               </th>
               {Array.from({ length: resources + 1 }, (_, d) => (
                 <th key={d} className={cross && cross.d === d ? 'col-head active' : 'col-head'}>
@@ -48,10 +49,10 @@ export function StageTable({
                 </th>
               ))}
               <th className="fstar-head" title="Valor óptimo de la fila">
-                f*
+                <MathView math="f^*" />
               </th>
               <th className="dstar-head" title="Decisiones que alcanzan el óptimo (empates incluidos)">
-                d*
+                <MathView math="d^*" />
               </th>
             </tr>
           </thead>

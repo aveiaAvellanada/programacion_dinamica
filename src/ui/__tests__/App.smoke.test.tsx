@@ -12,9 +12,10 @@ afterEach(cleanup);
 describe('App — prueba de humo de la interfaz', () => {
   it('monta sin lanzar y muestra el valor óptimo de El Primo', () => {
     render(<App />);
-    expect(screen.getByText('Valor óptimo f*')).toBeDefined();
+    const labels = screen.getAllByText(/Valor óptimo/i);
+    expect(labels.length).toBeGreaterThan(0);
     // El problema inicial (El Primo) tiene f* = 25 y 3 políticas óptimas.
-    const summary = screen.getByText('Valor óptimo f*').parentElement;
+    const summary = labels[0].parentElement;
     expect(summary?.textContent).toContain('25');
     // El resumen de cabecera, no el encabezado del panel de políticas
     // (ambos dicen "Políticas óptimas", así que se acota por clase).
@@ -33,12 +34,12 @@ describe('App — prueba de humo de la interfaz', () => {
     warnSpy.mockRestore();
   });
 
-  it('renderiza una tabla por etapa con sus filas de estado', () => {
+  it('renderiza la matriz de ganancias y tablas por etapa', () => {
     render(<App />);
-    // 3 etapas de El Primo.
-    expect(screen.getByText('Tienda 1')).toBeDefined();
-    expect(screen.getByText('Tienda 2')).toBeDefined();
-    expect(screen.getByText('Tienda 3')).toBeDefined();
+    // 3 etapas de El Primo (Tienda 1, Tienda 2, Tienda 3).
+    expect(screen.getAllByText('Tienda 1').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Tienda 2').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Tienda 3').length).toBeGreaterThan(0);
   });
 
   it('el inspector reacciona al hover sobre una celda factible', () => {
@@ -115,7 +116,7 @@ describe('App — prueba de humo de la interfaz', () => {
     fireEvent.change(input, { target: { value: '3' } });
 
     // Con N=3 cada tabla tiene 4 filas de estado (s=0..3); la app sigue viva.
-    expect(screen.getByText('Valor óptimo f*')).toBeDefined();
+    expect(screen.getAllByText(/Valor óptimo/i).length).toBeGreaterThan(0);
     expect(document.querySelector('.bellman')).toBeNull();
   });
 });
