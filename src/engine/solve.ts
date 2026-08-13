@@ -33,7 +33,7 @@ export function buildStages(problem: DPProblem): StageResult[] {
 
       for (let d = 0; d <= resources; d++) {
         const feasible = d <= s;
-        const pk = def.payoff[d];
+        const pk = def.payoff[d] ?? 0;
         const prevState = s - d;
 
         if (feasible) {
