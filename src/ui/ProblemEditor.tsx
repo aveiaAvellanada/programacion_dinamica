@@ -1,5 +1,6 @@
-import type { ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import type { DPProblem, Sense } from '../engine/types';
+import { PRESET_PROBLEMS } from './presets';
 
 interface Props {
   problem: DPProblem;
@@ -13,12 +14,17 @@ function resizePayoff(payoff: number[], resources: number): number[] {
 }
 
 export function ProblemEditor({ problem, onChange }: Props) {
+  const [showJsonModal, setShowJsonModal] = useState(false);
+  const [jsonInput, setJsonInput] = useState('');
+  const [jsonError, setJsonError] = useState<string | null>(null);
+
   function setResources(resources: number): void {
     if (!Number.isFinite(resources) || resources < 0) return;
+    const cleanN = Math.floor(resources);
     onChange({
       ...problem,
-      resources: Math.floor(resources),
-      stages: problem.stages.map((s) => ({ ...s, payoff: resizePayoff(s.payoff, Math.floor(resources)) })),
+      resources: cleanN,
+      stages: problem.stages.map((s) => ({ ...s, payoff: resizePayoff(s.payoff, cleanN) })),
     });
   }
 
@@ -47,7 +53,7 @@ export function ProblemEditor({ problem, onChange }: Props) {
       ...problem,
       stages: [
         ...problem.stages,
-        { id: `etapa-${n}-${Date.now()}`, label: `Etapa ${n}`, payoff: new Array(problem.resources + 1).fill(0) as number[] },
+        { id: `etapa-${n}-${Date.now()}`, label: `Etapa ${n}`, payoff: new Array(problem.resources + 1).fill(0) },
       ],
     });
   }
@@ -57,50 +63,155 @@ export function ProblemEditor({ problem, onChange }: Props) {
     onChange({ ...problem, stages: problem.stages.filter((_, i) => i !== idx) });
   }
 
+  function loadPreset(presetId: string): void {
+    const preset = PRESET_PROBLEMS.find((p) => p.id === presetId);
+    if (preset) {
+      onChange(preset.problem);
+    }
+  }
+
+  function exportJson(): void {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(problem, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `problema_dp_${Date.now()}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  }
+
+  function handleImportJson(): void {
+    try {
+      setJsonError(null);
+      const parsed = JSON.parse(jsonInput) as DPProblem;
+      if (typeof parsed.resources !== 'number' || !Array.isArray(parsed.stages)) {
+        throw new Error('Estructura JSON inválida. Debe incluir `resources` (número) y `stages` (array).');
+      }
+      onChange(parsed);
+      setShowJsonModal(false);
+      setJsonInput('');
+    } catch (err: unknown) {
+      setJsonError(err instanceof Error ? err.message : 'Error al procesar el JSON');
+    }
+  }
+
   return (
     <section className="panel">
-      <h2>Problema</h2>
-      <div className="row">
+      <div className="panel-header">
+        <h2>Configuración del Problema</h2>
+        <div className="presets-bar">
+          <label className="inline-label">
+            <span>Ejemplos predefinidos:</span>
+            <select onChange={(e) => e.target.value && loadPreset(e.target.value)} defaultValue="">
+              <option value="" disabled>
+                -- Seleccionar problema --
+              </option>
+              {PRESET_PROBLEMS.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="button" className="btn-secondary" onClick={exportJson}>
+            📥 Exportar JSON
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              setJsonInput(JSON.stringify(problem, null, 2));
+              setShowJsonModal(true);
+            }}
+          >
+            📤 Importar JSON
+          </button>
+        </div>
+      </div>
+
+      <div className="row params-row">
         <label>
-          Recursos (N)
+          <span>Recursos totales (N)</span>
           <input
             type="number"
             min={0}
+            max={20}
             value={problem.resources}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setResources(Number(e.target.value))}
           />
         </label>
         <label>
-          Sentido
+          <span>Objetivo (f*)</span>
           <select value={problem.sense} onChange={(e) => setSense(e.target.value as Sense)}>
-            <option value="max">Maximizar</option>
-            <option value="min">Minimizar</option>
+            <option value="max">Maximizar (Ganancia / VPN)</option>
+            <option value="min">Minimizar (Costo / Riesgo)</option>
           </select>
         </label>
-        <button type="button" onClick={addStage}>
-          + etapa
+        <button type="button" className="btn-primary" onClick={addStage}>
+          + Agregar Etapa
         </button>
       </div>
 
-      {problem.stages.map((stage, stageIdx) => (
-        <div className="stage-editor" key={stage.id}>
-          <div className="row">
-            <input className="stage-label" value={stage.label} onChange={(e) => setStageLabel(stageIdx, e.target.value)} />
-            <span className="stage-k">k = {stageIdx + 1}</span>
-            <button type="button" onClick={() => removeStage(stageIdx)} disabled={problem.stages.length <= 1}>
-              quitar
-            </button>
+      <div className="stages-container">
+        {problem.stages.map((stage, stageIdx) => (
+          <div className="stage-editor" key={stage.id}>
+            <div className="stage-header">
+              <span className="badge stage-badge">k = {stageIdx + 1}</span>
+              <input
+                className="stage-label"
+                value={stage.label}
+                placeholder={`Etapa ${stageIdx + 1}`}
+                onChange={(e) => setStageLabel(stageIdx, e.target.value)}
+              />
+              <button
+                type="button"
+                className="btn-danger-sm"
+                onClick={() => removeStage(stageIdx)}
+                disabled={problem.stages.length <= 1}
+                title="Eliminar esta etapa"
+              >
+                ✕ Quitar
+              </button>
+            </div>
+            <div className="payoff-grid">
+              <span className="payoff-grid-title">Retornos p_k(d_k):</span>
+              {stage.payoff.map((value, d) => (
+                <label key={d} className="payoff-cell">
+                  <span className="payoff-d-label">d={d}</span>
+                  <input
+                    type="number"
+                    value={value}
+                    onChange={(e) => setPayoffValue(stageIdx, d, Number(e.target.value))}
+                  />
+                </label>
+              ))}
+            </div>
           </div>
-          <div className="payoff-row">
-            {stage.payoff.map((value, d) => (
-              <label key={d} className="payoff-cell">
-                <span>d={d}</span>
-                <input type="number" value={value} onChange={(e) => setPayoffValue(stageIdx, d, Number(e.target.value))} />
-              </label>
-            ))}
+        ))}
+      </div>
+
+      {showJsonModal && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <h3>Importar / Editar JSON del Problema</h3>
+            <textarea
+              className="json-textarea"
+              rows={12}
+              value={jsonInput}
+              onChange={(e) => setJsonInput(e.target.value)}
+            />
+            {jsonError && <p className="error-text">{jsonError}</p>}
+            <div className="modal-actions">
+              <button type="button" className="btn-secondary" onClick={() => setShowJsonModal(false)}>
+                Cancelar
+              </button>
+              <button type="button" className="btn-primary" onClick={handleImportJson}>
+                Aplicar JSON
+              </button>
+            </div>
           </div>
         </div>
-      ))}
+      )}
     </section>
   );
 }

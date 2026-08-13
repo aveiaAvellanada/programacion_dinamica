@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSolution } from './useSolution';
 import { ProblemEditor } from './ProblemEditor';
 import { StageTable } from './StageTable';
+import { StateGraph } from './StateGraph';
 import { StepPlayer } from './StepPlayer';
 import { PolicyList } from './PolicyList';
 import { cellKey } from './highlight';
@@ -17,6 +18,7 @@ export function App() {
   const [hovered, setHovered] = useState<HoveredCell | null>(null);
   const [selectedPolicy, setSelectedPolicy] = useState<number | null>(null);
   const [stepIndex, setStepIndex] = useState<number>(-1);
+  const [activeTab, setActiveTab] = useState<'tables' | 'graph' | 'both'>('both');
 
   // Al editar el problema, cualquier hover/selección/paso anterior podría apuntar
   // a un estado o política que ya no existe — se limpia para evitar índices obsoletos.
@@ -75,32 +77,90 @@ export function App() {
 
   return (
     <div className="app">
-      <h1>Visualizador de Programación Dinámica Multietapa</h1>
+      <header className="app-header">
+        <div>
+          <h1>Visualizador de Programación Dinámica Multietapa</h1>
+          <p className="subtitle">
+            Inducción hacia atrás explícita (s_k, d_k, s_(k-1) = s_k - d_k) con tratamiento riguroso de empates
+          </p>
+        </div>
+        <div className="solution-summary">
+          <div className="summary-badge">
+            <span className="label">Valor Óptimo f*</span>
+            <span className="value">{solution.optimalValue}</span>
+          </div>
+          <div className="summary-badge">
+            <span className="label">Políticas Óptimas</span>
+            <span className="value">
+              {solution.policies.length} {solution.truncated ? '(truncado)' : ''}
+            </span>
+          </div>
+        </div>
+      </header>
 
       <ProblemEditor problem={problem} onChange={setProblem} />
 
-      <section className="panel">
-        <h2>
-          Tablas de inducción hacia atrás (k=1..{solution.stages.length})
-        </h2>
-        <p className="hint">
-          Pasa el mouse sobre una celda factible para ver qué celda óptima de la etapa anterior consulta.
-        </p>
-        <div className="tables">
-          {solution.stages.map((stage) => (
-            <StageTable
-              key={stage.k}
-              stage={stage}
-              resources={problem.resources}
-              primary={primary}
-              linked={linked}
-              path={path}
-              onHoverCell={(state, d) => setHovered({ k: stage.k, state, d })}
-              onLeaveCell={() => setHovered(null)}
-            />
-          ))}
-        </div>
-      </section>
+      <div className="view-selector">
+        <span className="view-selector-title">Visualización:</span>
+        <button
+          type="button"
+          className={activeTab === 'both' ? 'tab-btn active' : 'tab-btn'}
+          onClick={() => setActiveTab('both')}
+        >
+          📊 Vista Combinada (Tablas + Red)
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'tables' ? 'tab-btn active' : 'tab-btn'}
+          onClick={() => setActiveTab('tables')}
+        >
+          📋 Tablas de Inducción
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'graph' ? 'tab-btn active' : 'tab-btn'}
+          onClick={() => setActiveTab('graph')}
+        >
+          🕸️ Red de Estados (SVG)
+        </button>
+      </div>
+
+      {(activeTab === 'tables' || activeTab === 'both') && (
+        <section className="panel">
+          <div className="panel-header">
+            <h2>Tablas de Inducción Hacia Atrás (k=1..{solution.stages.length})</h2>
+            <span className="hint-pill">
+              Pasa el mouse sobre una celda factible para resaltar la celda que consulta en k-1
+            </span>
+          </div>
+          <div className="tables">
+            {solution.stages.map((stage) => (
+              <StageTable
+                key={stage.k}
+                stage={stage}
+                resources={problem.resources}
+                primary={primary}
+                linked={linked}
+                path={path}
+                onHoverCell={(state, d) => setHovered({ k: stage.k, state, d })}
+                onLeaveCell={() => setHovered(null)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {(activeTab === 'graph' || activeTab === 'both') && (
+        <StateGraph
+          problem={problem}
+          solution={solution}
+          primary={primary}
+          linked={linked}
+          path={path}
+          onHoverCell={(k, state, d) => setHovered({ k, state, d })}
+          onLeaveCell={() => setHovered(null)}
+        />
+      )}
 
       <StepPlayer steps={solution.steps} stepIndex={stepIndex} onStepIndexChange={setStepIndex} />
 
