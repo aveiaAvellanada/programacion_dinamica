@@ -1,0 +1,468 @@
+/* ============================================================
+   Capa de pulido: inspector de celda, leyenda, crosshair de
+   tablas, reproductor enriquecido y lista de políticas.
+   Se importa DESPUÉS de styles.css, por lo que gana en la
+   cascada ante reglas de igual especificidad.
+   ============================================================ */
+
+kbd {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* ---------- Leyenda ---------- */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  align-items: center;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  cursor: help;
+}
+
+.legend-swatch {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 1px solid #1e2634;
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+/* ---------- Inspector de celda ---------- */
+.inspector-panel {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 20;
+  background: rgba(19, 23, 34, 0.94);
+  backdrop-filter: blur(6px);
+}
+
+.inspector {
+  background: #0d1117;
+  border: 1px solid #1b212e;
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  min-height: 92px;
+  transition: border-color 0.15s ease;
+}
+
+.inspector.pinned {
+  border-left-color: var(--accent-warning);
+}
+
+.inspector-empty {
+  border-left-color: #1e2634;
+  display: flex;
+  align-items: center;
+}
+
+.inspector-placeholder {
+  color: var(--text-dim);
+  font-size: 0.86rem;
+}
+
+.inspector-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.inspector-sep {
+  color: #334155;
+}
+
+.inspector-unpin {
+  margin-left: auto;
+}
+
+.inspector-infeasible {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.88rem;
+}
+
+.inspector-note {
+  margin: 0.45rem 0 0;
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.tie-note {
+  color: var(--accent-path);
+  font-weight: 600;
+}
+
+/* Ecuación de Bellman desglosada */
+.bellman {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.bellman-term {
+  background: #111826;
+  border: 1px solid #1e2634;
+  border-radius: 6px;
+  padding: 0.25rem 0.55rem;
+  cursor: help;
+}
+
+.term-pk {
+  border-color: rgba(96, 165, 250, 0.45);
+  color: #93c5fd;
+}
+
+.term-fprev {
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #6ee7b7;
+}
+
+.bellman-op {
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.bellman-result {
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 6px;
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+.bellman-result.optimal {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.5);
+}
+
+.badge-optimal {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.phase-badge {
+  background: rgba(59, 130, 246, 0.14);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* ---------- Tablas: crosshair y desglose ---------- */
+.stage-table h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stage-table-name {
+  color: #e2e8f0;
+}
+
+.stage-table-scroll {
+  overflow-x: auto;
+}
+
+.cell {
+  position: relative;
+  line-height: 1.15;
+}
+
+.cell:hover:not(.infeasible) {
+  filter: brightness(1.35);
+}
+
+.cell-value {
+  display: block;
+}
+
+.cell-breakdown {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+  transition: opacity 0.12s ease;
+}
+
+.cell:hover .cell-breakdown,
+.cell.primary .cell-breakdown,
+.row-active .cell-breakdown {
+  opacity: 1;
+  height: auto;
+}
+
+.cell.pinned {
+  box-shadow: inset 0 0 0 2px var(--accent-warning);
+}
+
+.cross-row,
+.cross-col {
+  background: rgba(148, 163, 184, 0.07);
+}
+
+th.col-head.active,
+th.row-head.active {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+.corner,
+.fstar-head,
+.dstar-head {
+  cursor: help;
+}
+
+.corner {
+  color: var(--text-dim);
+}
+
+.dstar.has-tie {
+  color: var(--accent-path);
+}
+
+.tie-dot {
+  margin-left: 0.25rem;
+  font-size: 0.6rem;
+  vertical-align: middle;
+}
+
+/* ---------- Reproductor ---------- */
+.player-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.play-btn {
+  min-width: 118px;
+}
+
+.speed-group {
+  display: inline-flex;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.speed-btn {
+  border: none;
+  border-radius: 0;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.78rem;
+  background: #111826;
+}
+
+.speed-btn.active {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.scrubber-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 0.9rem;
+}
+
+.scrubber {
+  flex: 1;
+  padding: 0;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+
+.progress-track {
+  height: 3px;
+  background: #1b212e;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-optimal));
+  transition: width 0.12s linear;
+}
+
+.step-info {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.step-info .step-description {
+  margin: 0;
+  width: 100%;
+}
+
+.step-description.muted {
+  color: var(--text-dim);
+}
+
+/* ---------- Políticas ---------- */
+.count-chip {
+  display: inline-block;
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border-radius: 999px;
+  padding: 0.05rem 0.55rem;
+  font-size: 0.8rem;
+  margin-left: 0.35rem;
+}
+
+.policy-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.policy-rank {
+  color: var(--text-dim);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.policy-chain {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+.hop-state {
+  background: #111826;
+  border: 1px solid #1e2634;
+  border-radius: 5px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+}
+
+.hop-state.final {
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+}
+
+.hop-arrow {
+  color: var(--text-dim);
+  font-size: 0.74rem;
+  padding: 0 0.15rem;
+}
+
+.policy-btn.selected .hop-arrow {
+  color: var(--accent-path);
+}
+
+.policy-sum {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.contrib {
+  color: #93c5fd;
+}
+
+.policy-total {
+  color: var(--accent-optimal);
+  font-size: 0.95rem;
+}
+
+.policy-footnote {
+  margin: 0.85rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+/* ---------- Pie ---------- */
+.app-footer {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  padding: 1rem 0 0.5rem;
+  border-top: 1px solid var(--panel-border);
+}
+
+/* ---------- Accesibilidad y responsive ---------- */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 860px) {
+  body {
+    padding: 0.85rem;
+  }
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .solution-summary {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .summary-badge {
+    flex: 1;
+    align-items: flex-start;
+  }
+  .inspector-panel {
+    position: static;
+  }
+  .tables {
+    flex-direction: column;
+  }
+  .policy-sum {
+    margin-left: 0;
+    width: 100%;
+  }
+  .policy-btn {
+    align-items: flex-start;
+  }
+}
